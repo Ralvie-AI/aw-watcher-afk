@@ -112,7 +112,7 @@ class AFKWatcher:
                 if system in ["Darwin", "Linux"] and os.getppid() == 1:
                     # TODO: This won't work with PyInstaller which starts a bootloader process which will become the parent.
                     #       There is a solution however.
-                    #       See: https://github.com/ActivityWatch/sd-qt/issues/19#issuecomment-316741125
+                    #       See: https://github.com/ActivityWatch/sd-main/issues/19#issuecomment-316741125
                     logger.info("afkwatcher stopped because parent process died")
                     break
 
