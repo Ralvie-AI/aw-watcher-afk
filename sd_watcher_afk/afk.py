@@ -4,6 +4,8 @@ import platform
 from datetime import datetime, timedelta, timezone
 from time import sleep
 
+import win32gui
+
 from sd_client import ActivityWatchClient
 from sd_core.models import Event
 
@@ -45,6 +47,44 @@ class Settings:
 
         assert self.timeout >= self.poll_time
 
+def get_real_connection_status():
+    session_found = False
+    is_waiting = False
+    target_id = ""
+
+    def callback(hwnd, extra):
+        nonlocal session_found, is_waiting, target_id
+        if win32gui.IsWindowVisible(hwnd):
+            title = win32gui.GetWindowText(hwnd)
+            
+            # Identify the AnyDesk Session Window
+            if "AnyDesk" in title and any(char.isdigit() for char in title):
+                session_found = True
+                target_id = title
+                
+                # Internal check: Look for the "Connecting..." text within this window
+                # We check all child windows of the AnyDesk session
+                def child_callback(child_hwnd, _):
+                    nonlocal is_waiting
+                    child_text = win32gui.GetWindowText(child_hwnd)
+                    if "Connecting" in child_text:
+                        is_waiting = True
+                
+                try:
+                    win32gui.EnumChildWindows(hwnd, child_callback, None)
+                except:
+                    pass
+
+    win32gui.EnumWindows(callback, None)
+
+    if not session_found:
+        return False, "No AnyDesk session active."
+    
+    if is_waiting:
+        return False, f" WAITING: Request sent to {target_id}, but not accepted yet."
+    
+    return True, f"SESSION ACTIVE: You are now controlling {target_id}."
+
 
 class AFKWatcher:
     def __init__(self, args, testing=False):
@@ -74,10 +114,17 @@ class AFKWatcher:
          @param timestamp - Unix timestamp of the event
          @param duration - Time in seconds to wait before sending the event
         """
-        data = {"status": "afk" if afk else "not-afk", "app" : "afk", "title" : "Idle time"}
-        e = Event(timestamp=timestamp, duration=duration, data=data)
-        pulsetime = self.settings.timeout + self.settings.poll_time
-        self.client.heartbeat(self.bucketname, e, pulsetime=pulsetime, queued=True)
+        # data = {"status": "afk" if afk else "not-afk", "app" : "afk", "title" : "Idle time"}
+        # e = Event(timestamp=timestamp, duration=duration, data=data)
+        # pulsetime = self.settings.timeout + self.settings.poll_time
+        # self.client.heartbeat(self.bucketname, e, pulsetime=pulsetime, queued=True)
+
+        if not get_real_connection_status()[0]:
+            data = {"status": "afk" if afk else "not-afk", "app" : "afk", "title" : "Idle time"}
+            e = Event(timestamp=timestamp, duration=duration, data=data)
+            logger.info(f"afk => {e}")
+            pulsetime = self.settings.timeout + self.settings.poll_time
+            self.client.heartbeat(self.bucketname, e, pulsetime=pulsetime, queued=True)
 
     def run(self):
         """
