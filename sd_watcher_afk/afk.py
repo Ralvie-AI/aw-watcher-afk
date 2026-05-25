@@ -8,6 +8,7 @@ import win32gui
 
 from sd_client import ActivityWatchClient
 from sd_core.models import Event
+from sd_core.const import LOGGING_VERBOSE
 
 from .config import load_config
 
@@ -122,7 +123,10 @@ class AFKWatcher:
         if not get_real_connection_status()[0]:
             data = {"status": "afk" if afk else "not-afk", "app" : "afk", "title" : "Idle time"}
             e = Event(timestamp=timestamp, duration=duration, data=data)
-            logger.info(f"afk => {e}")
+
+            if LOGGING_VERBOSE != 0:
+                logger.info(f"afk => {e}")
+
             pulsetime = self.settings.timeout + self.settings.poll_time
             self.client.heartbeat(self.bucketname, e, pulsetime=pulsetime, queued=True)
 
