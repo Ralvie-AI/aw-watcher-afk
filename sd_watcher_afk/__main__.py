@@ -17,7 +17,7 @@ def main() -> None:
     setup_logging(
         "sd-watcher-afk",
         testing=args.testing,
-        verbose=args.verbose,
+        # verbose=args.verbose,
         log_stderr=True,
         log_file=True,
     )
