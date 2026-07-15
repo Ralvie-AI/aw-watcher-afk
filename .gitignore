@@ -6,3 +6,5 @@ build
 dist
 *~
 .mypy_cache
+*.c
+*.pyd
