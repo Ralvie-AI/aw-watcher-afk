@@ -725,7 +725,7 @@ develop = true
 
 [package.source]
 type = "directory"
-url = "../../activitywatch_fix_security_2/sd-client"
+url = "../sd-client"
 
 [[package]]
 name = "setuptools"
