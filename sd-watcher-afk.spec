@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 
 block_cipher = None
-
+excludes_package = ["PySide6.QtWebEngineWidgets", "PySide6.QtWebEngineCore"]
 
 a = Analysis(['sd_watcher_afk/__main__.py'],
              pathex=[],
@@ -31,7 +31,7 @@ a = Analysis(['sd_watcher_afk/__main__.py'],
              ],
              hookspath=[],
              runtime_hooks=[],
-             excludes=[],
+             excludes=excludes_package,
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
